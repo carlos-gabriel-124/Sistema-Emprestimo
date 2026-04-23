@@ -24,7 +24,7 @@ function login() {
   console.log('Sistema de Empréstimos\n');
   rl.question('Usuário: ', (user) => {
     rl.question('Senha: ', (senha) => {
-      if (user && senha === '14101709696') {
+      if (user && senha === '123.456.789-10') {
         menu();
       } else {
         console.log('Login inválido');
