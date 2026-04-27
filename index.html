@@ -1,0 +1,405 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Empréstimos Pro</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --primary: #4caf50;
+            --accent: #2196f3;
+            --danger: #ff5252;
+            --input-bg: #252525;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: var(--card);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        h2 { text-align: center; color: var(--primary); font-weight: 700; margin-bottom: 1.5rem; }
+        .hidden { display: none; }
+
+        label { display: block; font-size: 0.8rem; margin: 10px 0 5px 5px; color: #888; }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 10px;
+            background: var(--input-bg);
+            border: 1px solid #333;
+            color: white;
+            border-radius: 10px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        .row { display: flex; gap: 10px; }
+
+        .menu-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-menu { background: #333; color: white; text-align: left; padding-left: 20px; }
+        .btn-menu:hover { background: #444; transform: translateX(5px); }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-danger { background-color: var(--danger); color: white; margin-top: 10px; }
+
+        .result-box {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid var(--primary);
+        }
+
+        .item-lista {
+            background: #2a2a2a;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .status-pill {
+            font-size: 0.65rem;
+            padding: 4px 8px;
+            border-radius: 20px;
+            float: right;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .pendente { background: #ff9800; color: #000; }
+        .aprovado { background: #4caf50; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="tela-login">
+        <h2>Acesso</h2>
+        <input type="text" id="login-user" placeholder="Usuário">
+        <input type="password" id="login-pass" placeholder="Senha">
+        <button class="btn-primary" onclick="executarLogin()">Entrar no Sistema</button>
+    </div>
+
+    <div id="tela-menu" class="hidden">
+        <h2>Menu Principal</h2>
+        <div class="menu-grid">
+            <button class="btn-menu" onclick="mostrarTela('tela-cadastrar')">Cadastrar Empréstimo</button>
+            <button class="btn-menu" onclick="listarEmprestimos()">Ver Empréstimos</button>
+            <button class="btn-menu" onclick="verLimite()">Verificar Limite</button>
+            <button class="btn-menu" onclick="mostrarTela('tela-config')" style="color: var(--accent)">Configurações</button>
+            <button class="btn-danger" onclick="location.reload()">Sair do Sistema</button>
+        </div>
+    </div>
+
+    <div id="tela-cadastrar" class="hidden">
+        <h2>Novo Empréstimo</h2>
+        <input type="text" id="cad-nome" placeholder="Nome do Cliente">
+        <input type="text" id="cad-cpf" placeholder="CPF">
+        
+        <div class="row">
+            <div>
+                <label>Valor Base</label>
+                <input type="number" id="cad-valor" placeholder="0.00" oninput="calcularTudo()">
+            </div>
+            <div>
+                <label>Juros %</label>
+                <input type="number" id="cad-juros" placeholder="0" oninput="calcularTudo()">
+            </div>
+        </div>
+
+        <label>Parcelar?</label>
+        <select id="cad-parcelado" onchange="toggleParcelas()">
+            <option value="nao">Não (À vista)</option>
+            <option value="sim">Sim (Parcelado)</option>
+        </select>
+
+        <div id="box-parcelas" class="hidden">
+            <label>Quantidade de Parcelas</label>
+            <input type="number" id="cad-qtd-parcelas" value="1" min="1" oninput="calcularTudo()">
+        </div>
+
+        <div class="result-box">
+            <div style="font-size: 0.8rem; color: #aaa;">Total Final:</div>
+            <div id="res-total" style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">R$ 0,00</div>
+            <div id="res-parcela" style="font-size: 0.9rem; margin-top: 5px; color: var(--accent);"></div>
+        </div>
+
+        <button class="btn-primary" onclick="salvarEmprestimo()">Confirmar Cadastro</button>
+        <button class="btn-menu" onclick="mostrarTela('tela-menu')" style="text-align: center; margin-top: 5px;">Voltar</button>
+    </div>
+
+    <div id="tela-listar" class="hidden">
+        <h2 id="titulo-lista">Empréstimos</h2>
+        <div id="lista-container"></div>
+        <button class="btn-menu" onclick="mostrarTela('tela-menu')" style="text-align: center; margin-top: 20px;">Voltar</button>
+    </div>
+
+    <div id="tela-limite" class="hidden">
+        <h2>Controle de Limite</h2>
+        <div class="result-box" style="text-align: center; border-color: var(--accent); background: rgba(33, 150, 243, 0.1);">
+            <p style="margin: 0; color: #aaa;">Saldo Disponível</p>
+            <div id="val-limite-disp" style="font-size: 2rem; color: var(--accent); font-weight: bold; margin: 10px 0;"></div>
+            <p id="val-limite-total" style="font-size: 0.8rem; margin: 0;"></p>
+        </div>
+        <button class="btn-menu" onclick="mostrarTela('tela-menu')" style="text-align: center;">Voltar</button>
+    </div>
+
+    <div id="tela-config" class="hidden">
+        <h2>Configurações</h2>
+        <label>Alterar Limite Total (R$)</label>
+        <input type="number" id="cfg-novo-limite" placeholder="Ex: 20000">
+        <button class="btn-primary" onclick="atualizarLimite()">Salvar Novo Limite</button>
+        <button class="btn-menu" onclick="listarParaValidar()" style="margin-top: 10px;">Validar Pendentes</button>
+        <button class="btn-menu" onclick="mostrarTela('tela-menu')" style="margin-top: 5px; text-align: center;">Voltar</button>
+    </div>
+</div>
+<script>
+    function obterLimite() {
+        const salvo = localStorage.getItem('limiteTotal');
+        return (salvo && !isNaN(salvo)) ? Number(salvo) : 15000;
+    }
+
+    function carregarDados() {
+        try {
+            const dados = localStorage.getItem('emprestimos');
+            return dados ? JSON.parse(dados) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function salvarDados(dados) {
+        localStorage.setItem('emprestimos', JSON.stringify(dados));
+    }
+
+    function mostrarTela(id) {
+        document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function toggleParcelas() {
+        const isParcelado = document.getElementById('cad-parcelado').value === 'sim';
+        document.getElementById('box-parcelas').classList.toggle('hidden', !isParcelado);
+        calcularTudo();
+    }
+
+    function calcularTudo() {
+        const valor = Number(document.getElementById('cad-valor').value) || 0;
+        const juros = Number(document.getElementById('cad-juros').value) || 0;
+        const qtdParcelas = Math.max(1, Number(document.getElementById('cad-qtd-parcelas').value) || 1);
+        const isParcelado = document.getElementById('cad-parcelado').value === 'sim';
+
+        const totalComJuros = valor + (valor * (juros / 100));
+
+        document.getElementById('res-total').innerText =
+            `R$ ${totalComJuros.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+        if (isParcelado) {
+            const valorParcela = totalComJuros / qtdParcelas;
+            document.getElementById('res-parcela').innerText =
+                `${qtdParcelas}x de R$ ${valorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        } else {
+            document.getElementById('res-parcela').innerText = "";
+        }
+
+        return { totalComJuros, qtdParcelas, isParcelado };
+    }
+
+    // LOGIN ATUALIZADO
+    function executarLogin() {
+        const user = document.getElementById('login-user').value;
+        const pass = document.getElementById('login-pass').value;
+
+        if (!user || !pass) {
+            alert("Preencha usuário e senha!");
+            return;
+        }
+
+        if (user === 'admin' && pass === 'admin10') {
+            mostrarTela('tela-menu');
+        } else {
+            alert('Usuário ou senha incorretos!');
+        }
+    }
+
+    function salvarEmprestimo() {
+        const calc = calcularTudo();
+        const nome = document.getElementById('cad-nome').value;
+        const cpf = document.getElementById('cad-cpf').value;
+
+        if (!nome || calc.totalComJuros <= 0) {
+            alert("Preencha o nome e o valor!");
+            return;
+        }
+
+        const dados = carregarDados();
+
+        // VALIDA LIMITE
+        const limiteTotal = obterLimite();
+        const usado = dados.reduce((acc, e) => acc + (Number(e.valorFinal) || 0), 0);
+
+        if (usado + calc.totalComJuros > limiteTotal) {
+            alert("Limite insuficiente para esse empréstimo!");
+            return;
+        }
+
+        dados.push({
+            nome,
+            cpf,
+            valorFinal: Number(calc.totalComJuros),
+            parcelado: calc.isParcelado,
+            parcelas: calc.qtdParcelas,
+            status: 'pendente'
+        });
+
+        salvarDados(dados);
+
+        alert("Cadastrado com sucesso!");
+
+        // LIMPAR CAMPOS
+        document.getElementById('cad-nome').value = '';
+        document.getElementById('cad-cpf').value = '';
+        document.getElementById('cad-valor').value = '';
+        document.getElementById('cad-juros').value = '';
+        document.getElementById('cad-qtd-parcelas').value = 1;
+
+        mostrarTela('tela-menu');
+    }
+
+    function listarEmprestimos() {
+        const dados = carregarDados();
+        const container = document.getElementById('lista-container');
+        document.getElementById('titulo-lista').innerText = "Empréstimos Ativos";
+        container.innerHTML = '';
+
+        if (dados.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#666;">Nenhum registro encontrado.</p>';
+        }
+
+        dados.forEach(e => {
+            const vFinal = Number(e.valorFinal) || 0;
+
+            const detParcela = e.parcelado
+                ? `<br><small>${e.parcelas}x de R$ ${(vFinal / e.parcelas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</small>`
+                : '<br><small>À vista</small>';
+
+            container.innerHTML += `
+                <div class="item-lista">
+                    <span class="status-pill ${e.status}">${e.status}</span>
+                    <strong>${e.nome}</strong><br>
+                    <small>CPF: ${e.cpf || 'Não informado'}</small>
+                    ${detParcela}
+                    <div style="color: var(--primary); font-weight: bold; margin-top: 5px;">
+                        Total: R$ ${vFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                </div>
+            `;
+        });
+
+        mostrarTela('tela-listar');
+    }
+
+    function verLimite() {
+        const dados = carregarDados();
+        const limiteT = obterLimite();
+        const usado = dados.reduce((acc, e) => acc + (Number(e.valorFinal) || 0), 0);
+        const disponivel = limiteT - usado;
+
+        document.getElementById('val-limite-disp').innerText =
+            `R$ ${disponivel.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+        document.getElementById('val-limite-total').innerText =
+            `Limite Máximo: R$ ${limiteT.toLocaleString('pt-BR')}`;
+
+        mostrarTela('tela-limite');
+    }
+
+    function atualizarLimite() {
+        const novo = Number(document.getElementById('cfg-novo-limite').value);
+
+        if (novo > 0) {
+            localStorage.setItem('limiteTotal', novo);
+            alert("Limite atualizado com sucesso!");
+            mostrarTela('tela-menu');
+        } else {
+            alert("Insira um valor válido!");
+        }
+    }
+
+    function listarParaValidar() {
+        const dados = carregarDados();
+        const container = document.getElementById('lista-container');
+        document.getElementById('titulo-lista').innerText = "Validar Pendentes";
+        container.innerHTML = '';
+
+        let temPendente = false;
+
+        dados.forEach((e, i) => {
+            if (e.status === 'pendente') {
+                temPendente = true;
+                container.innerHTML += `
+                    <div class="item-lista">
+                        <strong>${e.nome}</strong><br>
+                        <small>CPF: ${e.cpf || 'Não informado'}</small><br>
+                        Total: R$ ${Number(e.valorFinal).toLocaleString('pt-BR')}
+                        <button class="btn-primary" style="padding: 8px; font-size: 0.8rem; margin-top: 10px;" onclick="aprovar(${i})">
+                            Aprovar Empréstimo
+                        </button>
+                    </div>
+                `;
+            }
+        });
+
+        if (!temPendente) {
+            container.innerHTML = '<p style="text-align:center;">Nada para validar.</p>';
+        }
+
+        mostrarTela('tela-listar');
+    }
+
+    function aprovar(i) {
+        const dados = carregarDados();
+        dados[i].status = 'aprovado';
+        salvarDados(dados);
+        listarParaValidar();
+    }
+</script>
+</script>
+
+</body>
+</html>
